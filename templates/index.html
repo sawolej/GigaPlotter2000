@@ -13,6 +13,7 @@
     <button type="submit" class="btn btn-primary w-100">Upload</button>
 </form>
 <button id="cleanButton" class="btn btn-secondary w-100 mt-3">Clean</button>
+<button id="cleanPliczkiButton" class="btn btn-secondary w-100 mt-3">Remove pliczki</button>
 <div id="parametersSection" class="mt-3" style="display: none;">
     <h3>Pliczki:</h3>
     <!-- parameters will be added here -->
@@ -191,6 +192,28 @@
                     const error = xhr.responseJSON.error || "an error occurred";
                     $("#errorMessage").text(error);
                 }
+            });
+            $("#cleanPliczkiButton").click(function () {
+                $.ajax({
+                    url: "/clean",
+                    type: "POST",
+                    success: function (response) {
+                        if (response.success) {
+                            // Clear the UI
+                            $("#parametersSection").hide();
+                            $("#parametersSection").empty();
+                            uploadedFiles = {}; // Clear the frontend file dictionary
+                            $("#plotImage").attr("src", "/static/placeholder.png"); // Reset the plot
+                            $("#errorMessage").text("");
+                        } else {
+                            $("#errorMessage").text(response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        const error = xhr.responseJSON.message || "An error occurred while cleaning files.";
+                        $("#errorMessage").text(error);
+                    }
+                });
             });
 
             // handle "Clean" button

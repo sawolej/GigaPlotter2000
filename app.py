@@ -240,6 +240,24 @@ def update_time_domain():
 
 from flask import send_from_directory
 
+@app.route("/clean", methods=["POST"])
+def clean_files():
+    try:
+        # Delete all files in the upload folder
+        for filename in os.listdir(UPLOAD_FOLDER):
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+        # Clear the uploaded_files dictionary
+        global uploaded_files
+        uploaded_files = {}
+
+        return jsonify({"success": True, "message": "All files deleted successfully."})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error while deleting files: {str(e)}"}), 500
+
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
