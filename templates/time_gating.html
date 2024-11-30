@@ -1,0 +1,138 @@
+﻿{% extends "base.html" %}
+
+{% block title %} - Time Gating{% endblock %}
+
+{% block nav_active_time_gating %}active{% endblock %}
+
+{% block sidebar %}
+<h2>Time Gating</h2>
+<div id="parametersSection" class="mt-3">
+    <!-- parameters will be added here -->
+</div>
+<div class="mt-3">
+    <label for="centerInput" class="form-label">Center (ns)</label>
+    <input type="number" step="any" name="center" id="centerInput" class="form-control" value="7">
+</div>
+<div class="mt-3">
+    <label for="spanInput" class="form-label">Span (ns)</label>
+    <input type="number" step="any" name="span" id="spanInput" class="form-control" value="3">
+</div>
+<button id="updateButton" class="btn btn-primary w-100 mt-3">Update Plot</button>
+<div id="errorMessage" class="mt-3 text-danger"></div>
+{% endblock %}
+
+{% block main_content %}
+<h1 class="text-center">Time Gating</h1>
+<img id="plotImage" src="/static/placeholder.png" alt="Your Plot" class="plot-img">
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let uploadedFiles = {};  // stores parameters for each uploaded file
+
+    $(document).ready(function () {
+        // get the list of uploaded files from the server
+        $.ajax({
+            url: "/get-uploaded-files",
+            type: "GET",
+            success: function (response) {
+                uploadedFiles = response.uploaded_files;
+                displayParameters();
+            },
+            error: function (xhr) {
+                const error = xhr.responseJSON.error || "An error occurred";
+                $("#errorMessage").text(error);
+            }
+        });
+
+        function displayParameters() {
+            const parametersSection = $("#parametersSection");
+            parametersSection.empty();
+
+            for (const filename in uploadedFiles) {
+                const parameters = uploadedFiles[filename].parameters;
+                const fileDivId = `file-${filename.replace(/\W/g, '')}`;
+
+                const fileDiv = `
+                    <div id="${fileDivId}" class="file-parameters">
+                        <h4>${filename}</h4>
+                        <form class="parametersForm d-flex flex-wrap">
+                            <!-- checkboxes will be added here -->
+                        </form>
+                    </div>
+                `;
+                parametersSection.append(fileDiv);
+
+                const form = $(`#${fileDivId} .parametersForm`);
+
+                parameters.forEach(param => {
+                    const checkboxId = `${filename}-${param}`;
+                    // checkboxes are unchecked by default
+                    const checkbox = `
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input parameter-checkbox" type="checkbox" value="${param}" id="${checkboxId}" data-filename="${filename}">
+                            <label class="form-check-label" for="${checkboxId}">
+                                ${param.toUpperCase()}
+                            </label>
+                        </div>
+                    `;
+                    form.append(checkbox);
+                });
+            }
+
+            // add listener to checkboxes
+            $(".parameter-checkbox").off('change').on('change', function () {
+                // we can automatically update the plot or leave it to the button
+            });
+        }
+
+        // handle "Update Plot" button
+        $("#updateButton").click(function () {
+            updatePlot();
+        });
+
+        function updatePlot() {
+            const selectedParameters = [];
+
+            $(".parameter-checkbox:checked").each(function () {
+                const filename = $(this).data('filename');
+                const param = $(this).val();
+                selectedParameters.push({
+                    filename: filename,
+                    parameter: param
+                });
+            });
+
+            const center = $("#centerInput").val();
+            const span = $("#spanInput").val();
+
+            if (selectedParameters.length === 0) {
+                $("#errorMessage").text("nie zesraj sie");
+                return;
+            } else {
+                $("#errorMessage").text("");
+            }
+
+            const data = {
+                selections: selectedParameters,
+                center: center,
+                span: span
+            };
+
+            $.ajax({
+                url: "/update-time-gating",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    $("#plotImage").attr("src", response.plot_url + "?t=" + new Date().getTime());
+                },
+                error: function (xhr) {
+                    const error = xhr.responseJSON.error || "An error occurred";
+                    $("#errorMessage").text(error);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

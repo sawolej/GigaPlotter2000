@@ -1,14 +1,20 @@
-body {
+﻿body {
 	background-color: #1a1a1d;
 	color: #c9c9c9;
 	font-family: "Roboto", sans-serif;
 }
 
+.navbar .nav-link.active {
+	background-color: #343a40;
+	border-radius: 5px;
+}
+
 .sidebar {
 	background-color: #2b2b2f;
 	padding: 20px;
-	height: 100vh;
+	height: calc(100vh - 56px); /* Odejmujemy wysokość navbaru */
 	border-right: 1px solid #444;
+	overflow-y: auto;
 }
 
 .main-content {
@@ -22,3 +28,30 @@ body {
 	border: 1px solid #444;
 	box-shadow: 0 0 20px cyan;
 }
+
+/* Dodaj poniższe style do pliku styles.css */
+#parametersSection h3 {
+	margin-top: 20px;
+}
+
+.parameter-checkbox + label {
+	margin-left: 5px;
+}
+
+
+/* Dostosowanie odstępów między checkboxami */
+.parametersForm .form-check-inline {
+	margin-right: 10px;
+}
+
+
+.navbar .logo {
+	margin-left: 20px;
+	font-family: 'Orbitron', sans-serif;
+	font-weight: 700; /* dopasuj wagę czcionki */
+	font-size: 24px; /* dostosuj rozmiar czcionki według potrzeb */
+	color: #0ff; /* neonowy kolor */
+	text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
+}
+
+
