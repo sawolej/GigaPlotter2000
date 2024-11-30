@@ -238,6 +238,12 @@ def update_time_domain():
 
     return jsonify({"plot_url": f"/{plot_path}"})
 
+from flask import send_from_directory
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 # handle plot updates for time gating
 @app.route("/update-time-gating", methods=["POST"])
