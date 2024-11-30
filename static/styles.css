@@ -12,7 +12,7 @@
 .sidebar {
 	background-color: #2b2b2f;
 	padding: 20px;
-	height: calc(100vh - 56px); /* Odejmujemy wysokość navbaru */
+	height: calc(100vh - 56px); 
 	border-right: 1px solid #444;
 	overflow-y: auto;
 }
@@ -29,7 +29,6 @@
 	box-shadow: 0 0 20px cyan;
 }
 
-/* Dodaj poniższe style do pliku styles.css */
 #parametersSection h3 {
 	margin-top: 20px;
 }
@@ -39,7 +38,6 @@
 }
 
 
-/* Dostosowanie odstępów między checkboxami */
 .parametersForm .form-check-inline {
 	margin-right: 10px;
 }
@@ -48,10 +46,17 @@
 .navbar .logo {
 	margin-left: 20px;
 	font-family: 'Orbitron', sans-serif;
-	font-weight: 700; /* dopasuj wagę czcionki */
-	font-size: 24px; /* dostosuj rozmiar czcionki według potrzeb */
+	font-weight: 700; 
+	font-size: 24px; 
 	color: #0ff; /* neonowy kolor */
 	text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
 }
 
 
+#parametersSection h4 {
+	font-size: 16px;
+}
+
+#parametersSection h3 {
+	font-size: 18px;
+}

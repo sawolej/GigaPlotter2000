@@ -14,10 +14,8 @@ PLOT_FOLDER = "static/plots"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PLOT_FOLDER, exist_ok=True)
 
-# dictionary to store info about uploaded files and their parameters
 uploaded_files = {}
 
-# main page (frequency domain)
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -97,7 +95,7 @@ def update_plot():
         return jsonify({"error": "No parameters selected"}), 400
 
     plt.style.use("dark_background")
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
 
     for selection in selections:
         filename = selection.get("filename")
@@ -108,7 +106,7 @@ def update_plot():
 
         filepath = uploaded_files[filename]["filepath"]
 
-        # load data using scikit-rf
+        # wczytaj dane za pomocą scikit-rf
         try:
             network = rf.Network(filepath)
         except Exception as e:
@@ -133,14 +131,22 @@ def update_plot():
         return jsonify({"error": "No valid parameters to plot"}), 400
 
     ax.set_title("Frequency Domain")
-    ax.legend()
+    # Adjust the plot area to make room for the legend
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])  # Reduce plot width to 75%
 
-    plt.tight_layout()
+    # Place the legend outside the plot
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='small')
+
+    # Adjust the figure layout to prevent clipping
+    fig.subplots_adjust(right=0.85)
+
     plot_path = os.path.join(PLOT_FOLDER, "frequency_plot.png")
-    plt.savefig(plot_path)
+    plt.savefig(plot_path, bbox_inches='tight')
     plt.close()
 
     return jsonify({"plot_url": f"/{plot_path}"})
+
 
 # route to get the list of uploaded files
 @app.route("/get-uploaded-files", methods=["GET"])
@@ -165,7 +171,7 @@ def update_time_domain():
         return jsonify({"error": "No parameters selected"}), 400
 
     plt.style.use("dark_background")
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
 
     for selection in selections:
         filename = selection.get("filename")
@@ -176,13 +182,13 @@ def update_time_domain():
 
         filepath = uploaded_files[filename]["filepath"]
 
-        # load data using scikit-rf
+        # wczytaj dane za pomocą scikit-rf
         try:
             network = rf.Network(filepath)
         except Exception as e:
             return jsonify({"error": f"Failed to load file {filename}: {str(e)}"}), 400
 
-        # select the appropriate S-parameter
+        # wybierz odpowiedni parametr S
         if parameter == "s11" and hasattr(network, 's11'):
             s_param = network.s11
         elif parameter == "s21" and hasattr(network, 's21'):
@@ -192,21 +198,21 @@ def update_time_domain():
         elif parameter == "s22" and hasattr(network, 's22'):
             s_param = network.s22
         else:
-            continue  # skip if parameter doesn't exist
+            continue  # pomiń, jeśli parametr nie istnieje
 
-        # compute time domain response
+        # oblicz odpowiedź w dziedzinie czasu
         N = len(s_param.f)
         delta_f = s_param.f[1] - s_param.f[0]
         time = np.fft.fftfreq(N, d=delta_f)
-        time = np.fft.fftshift(time) * 1e9  # convert to nanoseconds
+        time = np.fft.fftshift(time) * 1e9  # konwersja na nanosekundy
         s_time = np.fft.fftshift(np.fft.ifft(s_param.s[:, 0, 0]))
 
-        # filter to keep only positive time
+        # filtruj, aby zachować tylko dodatni czas
         positive_time_mask = time >= 0
         time_positive = time[positive_time_mask]
         s_time_positive = s_time[positive_time_mask]
 
-        # plot magnitude in time domain
+        # wykres modułu w dziedzinie czasu
         ax.plot(time_positive, np.abs(s_time_positive), label=f"{filename} {parameter.upper()}")
 
     if not ax.lines:
@@ -215,14 +221,23 @@ def update_time_domain():
     ax.set_title('Time Domain (Magnitude)')
     ax.set_xlabel("Time (ns)")
     ax.set_ylabel("Magnitude")
-    ax.legend()
 
-    plt.tight_layout()
+    # Adjust the plot area
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
+
+    # Place the legend outside the plot
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='small')
+
+    # Adjust the figure layout
+    fig.subplots_adjust(right=0.85)
+
     plot_path = os.path.join(PLOT_FOLDER, "time_domain_plot.png")
-    plt.savefig(plot_path)
+    plt.savefig(plot_path, bbox_inches='tight')
     plt.close()
 
     return jsonify({"plot_url": f"/{plot_path}"})
+
 
 # handle plot updates for time gating
 @app.route("/update-time-gating", methods=["POST"])
@@ -239,7 +254,7 @@ def update_time_gating():
     span = float(span)
 
     plt.style.use("dark_background")
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6))  # Increased width
 
     for selection in selections:
         filename = selection.get("filename")
@@ -304,9 +319,15 @@ def update_time_gating():
         axes[2].set_ylabel("Magnitude")
         axes[2].legend()
 
-    plt.tight_layout()
+    for ax in axes:
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='small')
+
+    fig.subplots_adjust(right=0.85)
+
     plot_path = os.path.join(PLOT_FOLDER, "time_gating_plot.png")
-    plt.savefig(plot_path)
+    plt.savefig(plot_path, bbox_inches='tight')
     plt.close()
 
     return jsonify({"plot_url": f"/{plot_path}"})

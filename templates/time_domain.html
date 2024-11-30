@@ -5,22 +5,22 @@
 {% block nav_active_time_domain %}active{% endblock %}
 
 {% block sidebar %}
-<h2>Time Domain Analysis</h2>
 <div id="parametersSection" class="mt-3">
     <!-- parameters will be added here -->
 </div>
-<button id="updateButton" class="btn btn-primary w-100 mt-3">Update Plot</button>
+<button id="cleanButton" class="btn btn-secondary w-100 mt-3">Clean</button>
 <div id="errorMessage" class="mt-3 text-danger"></div>
 {% endblock %}
 
 {% block main_content %}
-<h1 class="text-center">Time Domain Analysis</h1>
+<h1 class="text-center">Time Domain</h1>
 <img id="plotImage" src="/static/placeholder.png" alt="Your Plot" class="plot-img">
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
     let uploadedFiles = {};  // stores parameters for each uploaded file
+    let selectedParameters = [];
 
     $(document).ready(function () {
         // get the list of uploaded files from the server
@@ -30,6 +30,7 @@
             success: function (response) {
                 uploadedFiles = response.uploaded_files;
                 displayParameters();
+                updatePlot(); // initial plot update
             },
             error: function (xhr) {
                 const error = xhr.responseJSON.error || "An error occurred";
@@ -40,6 +41,9 @@
         function displayParameters() {
             const parametersSection = $("#parametersSection");
             parametersSection.empty();
+
+            // get selections from localStorage
+            let storedSelections = JSON.parse(localStorage.getItem('selectedParameters')) || [];
 
             for (const filename in uploadedFiles) {
                 const parameters = uploadedFiles[filename].parameters;
@@ -59,10 +63,11 @@
 
                 parameters.forEach(param => {
                     const checkboxId = `${filename}-${param}`;
-                    // checkboxes are unchecked by default
+                    // check if this parameter is selected in localStorage
+                    const isChecked = storedSelections.some(selection => selection.filename === filename && selection.parameter === param) ? 'checked' : '';
                     const checkbox = `
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input parameter-checkbox" type="checkbox" value="${param}" id="${checkboxId}" data-filename="${filename}">
+                            <input class="form-check-input parameter-checkbox" type="checkbox" value="${param}" id="${checkboxId}" data-filename="${filename}" ${isChecked}>
                             <label class="form-check-label" for="${checkboxId}">
                                 ${param.toUpperCase()}
                             </label>
@@ -74,18 +79,27 @@
 
             // add listener to checkboxes
             $(".parameter-checkbox").off('change').on('change', function () {
-                // we can automatically update the plot or leave it to the button
+                saveSelections();
+                updatePlot();
             });
         }
 
-        // handle "Update Plot" button
-        $("#updateButton").click(function () {
-            updatePlot();
-        });
+        function saveSelections() {
+            selectedParameters = [];
+            $(".parameter-checkbox:checked").each(function () {
+                const filename = $(this).data('filename');
+                const param = $(this).val();
+                selectedParameters.push({
+                    filename: filename,
+                    parameter: param
+                });
+            });
+            // save selections to localStorage
+            localStorage.setItem('selectedParameters', JSON.stringify(selectedParameters));
+        }
 
         function updatePlot() {
-            const selectedParameters = [];
-
+            selectedParameters = [];
             $(".parameter-checkbox:checked").each(function () {
                 const filename = $(this).data('filename');
                 const param = $(this).val();
@@ -96,7 +110,8 @@
             });
 
             if (selectedParameters.length === 0) {
-                $("#errorMessage").text("nie zesraj sie");
+                $("#errorMessage").text("Please select at least one parameter to plot.");
+                $("#plotImage").attr("src", "/static/placeholder.png");
                 return;
             } else {
                 $("#errorMessage").text("");
@@ -120,6 +135,13 @@
                 }
             });
         }
+
+        // handle "Clean" button
+        $("#cleanButton").click(function () {
+            $(".parameter-checkbox").prop('checked', false);
+            saveSelections();
+            updatePlot();
+        });
     });
 </script>
 {% endblock %}
